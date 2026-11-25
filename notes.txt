@@ -1,0 +1,381 @@
+CIS 404 GROUP PROJECT — ANALYSIS NOTES
+=======================================
+
+PROJECT QUESTION
+How well can website session characteristics predict whether
+a visitor makes a purchase?
+
+
+1. DATASET
+----------
+Rows: 12,330
+Columns: 18
+
+Outcome variable: Revenue
+Purchase sessions: 1,908 (15.47%)
+Non-purchase sessions: 10,422 (84.53%)
+
+The outcome is imbalanced, with substantially fewer purchasing
+sessions than non-purchasing sessions.
+
+
+2. DATA CLEANING
+----------------
+Missing values: 0
+Duplicate rows: 125
+
+Categorical variables:
+- Month
+- VisitorType
+
+Boolean variables:
+- Weekend
+- Revenue
+
+Cleaning decisions:
+- No rows removed for missing values because none were found.
+- The 125 identical rows will be retained because each row
+  represents a separate website session, and separate sessions
+  can have identical browsing characteristics.
+- Revenue will be converted from True/False to 1/0 for analysis.
+- Categorical predictors will later be converted to dummy variables
+  for logistic regression.
+
+
+3. DATA PATTERNS
+----------------
+
+FIGURE 1 — PURCHASE RATE BY VISITOR TYPE
+
+Visitor Type          Purchase Rate     Sessions
+New Visitor              24.91%           1,694
+Other                    18.82%              85
+Returning Visitor        13.93%          10,551
+
+Finding:
+New visitors had the highest purchase rate at 24.91%, compared
+with 13.93% for returning visitors.
+
+Returning visitors represented the large majority of sessions
+(10,551), while new visitors represented 1,694 sessions.
+
+Interpretation:
+Purchase rates differ substantially by visitor type. New visitors
+were more likely to make a purchase during a session, even though
+returning visitors generated substantially more website traffic.
+
+
+FIGURE 2 — PURCHASE RATE BY TRAFFIC TYPE
+
+Traffic Type    Purchase Rate    Sessions
+1                  10.69%          2,451
+2                  21.65%          3,913
+3                   8.77%          2,052
+4                  15.43%          1,069
+5                  21.54%            260
+6                  11.94%            444
+7                  30.00%             40
+8                  27.70%            343
+9                   9.52%             42
+10                 20.00%            450
+11                 19.03%            247
+12                  0.00%              1
+13                  5.83%            738
+14                 15.38%             13
+15                  0.00%             38
+16                 33.33%              3
+17                  0.00%              1
+18                  0.00%             10
+19                  5.88%             17
+20                 25.25%            198
+
+Finding:
+Purchase rates varied across traffic types.
+
+Among the traffic types with substantial numbers of sessions,
+Traffic Type 2 had a 21.65% purchase rate across 3,913 sessions,
+while Traffic Type 3 had an 8.77% purchase rate across 2,052
+sessions.
+
+Interpretation:
+Some of the highest percentages occur in traffic types with very
+small sample sizes. For example, Traffic Type 16 had a 33.33%
+purchase rate but contained only 3 sessions. Therefore, purchase
+rate should be interpreted together with session count.
+
+
+FIGURE 3 — PRODUCT-PAGE VISITS BY PURCHASE OUTCOME
+
+Average product-page visits:
+No Purchase: 28.71
+Purchase:    48.21
+
+Finding:
+Sessions that resulted in purchases viewed approximately 19.50
+more product-related pages on average.
+
+Purchasing sessions viewed about 68% more product-related pages
+on average than non-purchasing sessions.
+
+Interpretation:
+Greater engagement with product pages is associated with a higher
+likelihood of purchase.
+
+
+FIGURE 4 — PRODUCT BROWSING DURATION BY PURCHASE OUTCOME
+
+Average product browsing duration:
+No Purchase: 1,069.99 seconds
+Purchase:    1,876.21 seconds
+
+Finding:
+Purchasing sessions spent approximately 806 additional seconds
+on product-related pages on average.
+
+This is approximately 13.4 additional minutes of product browsing.
+
+Interpretation:
+Sessions resulting in purchases show substantially greater
+product-page engagement both in number of pages viewed and time
+spent browsing.
+
+FIGURE 5 — CONFUSION MATRIX
+
+Finding:
+The balanced logistic regression correctly identified 255 of the
+382 actual purchasing sessions, while missing 127 purchasers.
+
+However, the model also incorrectly classified 720 non-purchasing
+sessions as purchases.
+
+Interpretation:
+The balanced model is much better at identifying actual purchasers
+than the original logistic regression. It detected 66.75% of
+purchasing sessions, compared with only 3.93% for the initial model.
+
+The trade-off is a large number of false positives. The model is
+therefore better suited to situations where missing a potential
+purchaser is more costly than incorrectly targeting a non-purchaser.
+
+Business Takeaway:
+The model could potentially support relatively low-cost actions,
+such as website personalization or marketing prompts, where false
+positives are acceptable. It would be less appropriate for costly
+interventions because many predicted purchasers do not actually buy.
+
+FIGURE 6 — PRECISION-RECALL CURVE
+
+Finding:
+The precision-recall curve shows a trade-off between identifying
+more purchasing sessions and maintaining precise predictions.
+
+As recall increases, precision generally decreases. This means
+the model can identify a larger share of actual purchasers only
+by also incorrectly flagging more non-purchasing sessions.
+
+The final model's average precision is 30.63%, compared with an
+overall purchase rate of 15.47%.
+
+Business Interpretation:
+The model provides some ability to distinguish purchasing sessions,
+but the appropriate classification threshold depends on the
+business cost of false positives compared with missed purchasers.
+
+4. LOGISTIC REGRESSION
+----------------------
+Train/Test Split:
+- Training observations: 9,864 (80%)
+- Testing observations: 2,466 (20%)
+
+Purchase rate:
+- Training data: 15.47%
+- Testing data: 15.49%
+
+The stratified split successfully preserved the approximately
+15.5% purchase rate in both the training and testing datasets.
+
+
+5. MODEL RESULTS
+----------------
+
+Accuracy:          84.47%
+Precision:         48.39%
+Recall:             3.93%
+F1 Score:           7.26%
+Average Precision: 30.76%
+
+Confusion Matrix:
+True Negatives:  2,068
+False Positives:    16
+False Negatives:   367
+True Positives:     15
+
+Always-No-Purchase Baseline Accuracy: 84.51%
+
+Interpretation:
+The initial logistic regression performed poorly at identifying
+purchasing sessions.
+
+Although its overall accuracy was 84.47%, this was approximately
+the same as an always-no-purchase baseline. The model correctly
+identified only 15 of 382 actual purchasing sessions, resulting
+in recall of only 3.93%.
+
+The model therefore favored the majority non-purchase class.
+Accuracy alone makes the model appear much stronger than it
+actually is for detecting purchases.
+
+6. FIVE-FOLD CROSS-VALIDATION
+-----------------------------
+
+Settings compared:
+- Logistic regression with no class weighting
+- Logistic regression with balanced class weighting
+
+Cross-validation:
+- 5 folds
+- Optimization metric: F1 score
+- Performed using training data only
+
+Best setting:
+class_weight = "balanced"
+
+Best cross-validation F1 score:
+0.3697
+
+Interpretation:
+Five-fold cross-validation selected balanced class weighting.
+This gives greater importance to the less common purchase class
+and produced a better balance between precision and recall than
+the standard logistic regression.
+
+The test set was not used to select this setting.
+
+7. FINAL LOGISTIC REGRESSION RESULTS
+-----------------------
+Five-fold cross-validation selected:
+class_weight = "balanced"
+
+Final Test Results:
+Accuracy:          65.65%
+Precision:         26.15%
+Recall:            66.75%
+F1 Score:          37.58%
+Average Precision: 30.63%
+
+Always-No-Purchase Baseline Accuracy:
+84.51%
+
+Final Confusion Matrix:
+True Negatives:  1,364
+False Positives:   720
+False Negatives:   127
+True Positives:    255
+
+MAIN FINDING:
+Balancing the classes substantially improved the model's ability
+to detect purchasing sessions.
+
+The initial logistic regression identified only 15 of 382 actual
+purchasing sessions, producing recall of 3.93%.
+
+The balanced logistic regression identified 255 of 382 actual
+purchasing sessions, increasing recall to 66.75%.
+
+TRADE-OFF:
+The improvement in recall came at the cost of lower precision and
+accuracy. The balanced model produced 720 false positives and had
+precision of 26.15%.
+
+Although the always-no-purchase baseline achieves higher accuracy
+(84.51%), it identifies zero purchasing sessions. Therefore,
+accuracy alone is not an appropriate measure of usefulness for
+this business problem.
+
+BUSINESS INTERPRETATION:
+The balanced model may be useful when the cost of targeting a
+false positive is relatively low and the business places greater
+value on identifying more potential purchasers.
+
+However, the model's relatively low precision means it should not
+be treated as a highly reliable purchase prediction system.
+
+
+7. LLM APPLICATION
+------------------
+Prompt:
+"We are analyzing an online shopping dataset to predict whether a website session results in a purchase. Only 15.47% of sessions result in purchases.
+Our initial logistic regression produced:
+Accuracy: 84.47%
+Precision: 48.39%
+Recall: 3.93%
+F1 score: 7.26%
+Average precision: 30.76%
+
+Its confusion matrix showed:
+True negatives: 2,068
+False positives: 16
+False negatives: 367
+True positives: 15
+An always-no-purchase baseline has 84.51% accuracy.
+
+We then used five-fold cross-validation on the training data to compare standard logistic regression with balanced class weighting. Cross-validation selected class_weight="balanced" with a cross-validation F1 score of 0.3697.
+The final balanced logistic regression produced:
+Accuracy: 65.65%
+Precision: 26.15%
+Recall: 66.75%
+F1 score: 37.58%
+Average precision: 30.63%
+
+Its confusion matrix showed:
+True negatives: 1,364
+False positives: 720
+False negatives: 127
+True positives: 255
+
+Explain why balancing the classes caused accuracy and precision to decrease while recall and F1 increased substantially. From the perspective of an e-commerce marketing manager, explain when this trade-off could be useful and when it could be harmful. Finally, identify one limitation or concern in these results that we should investigate before recommending that the model be used."
+
+LLM used:
+ChatGPT
+
+Purpose:
+We asked the LLM to interpret the trade-off between our initial
+and balanced logistic regression and challenge our interpretation
+of the improved recall.
+
+Key insight:
+The LLM identified that although recall increased dramatically
+from 3.93% to 66.75%, average precision remained nearly unchanged
+(30.76% vs. 30.63%).
+
+This suggests that balanced class weighting primarily changed the
+model's classification behavior rather than dramatically improving
+its underlying ability to rank purchasers above non-purchasers.
+
+How it affected our analysis:
+We changed our interpretation from simply stating that the
+balanced model was "better" to describing the specific trade-off
+between detecting purchasers and generating false positives.
+
+The LLM also suggested that the usefulness of the model depends
+on the business cost of false positives and false negatives.
+
+Verification:
+We verified all performance values against the metrics calculated
+directly in Python and checked the confusion matrices.
+
+The initial model identified 15 of 382 purchasers.
+The balanced model identified 255 of 382 purchasers.
+
+Average precision changed only from 30.76% to 30.63%, confirming
+the LLM's observation that the improvement was mainly in the
+classification trade-off rather than overall ranking performance.
+
+
+8. REPORT / PRESENTATION NOTES
+-----------------------------
+Business takeaway:
+
+Limitations:
+
+Future improvements:
